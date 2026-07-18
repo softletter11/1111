@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생태계 다양성 및 평형 가상 시뮬레이터</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Pretendard & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* 피라미드 호버 및 전환 애니메이션 */
+        .ecosystem-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .ecosystem-card:hover {
+            transform: translateY(-4px);
+        }
+        /* 게임식 판넬 애니메이션 효과 */
+        .pulse-soft {
+            animation: softPulse 2.5s infinite ease-in-out;
+        }
+        @keyframes softPulse {
+            0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(20, 184, 166, 0.2)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(20, 184, 166, 0.6)); }
+        }
+        /* 스크롤바 미세 커스텀 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(241, 245, 249, 1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(203, 213, 225, 1);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- 상단 헤더 -->
+    <header class="bg-teal-900 text-white shadow-lg py-4 px-6 border-b border-teal-950">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-teal-800 rounded-2xl shadow-inner">
+                    <i class="fa-solid fa-network-wired text-xl md:text-2xl text-teal-200"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg md:text-xl font-extrabold tracking-tight flex items-center gap-2">
+                        생태계 다양성 & 평형 시뮬레이터
+                        <span id="cloud-status-badge" class="px-2 py-0.5 bg-teal-950 text-teal-400 border border-teal-800 text-[10px] rounded-md font-normal">
+                            <i class="fa-solid fa-cloud mr-1"></i>로컬 모드
+                        </span>
+                    </h1>
+                    <p class="text-[11px] text-teal-100 mt-0.5">고등학교 1학년 통합과학 2 맞춤형 디지털 가상 실험 실시간 교구</p>
+                </div>
+            </div>
+            
+            <!-- 화면 대시보드 모드 전환 토글러 -->
+            <div class="flex items-center gap-2 bg-teal-950/80 p-1.5 rounded-xl border border-teal-800">
+                <button onclick="switchView('student')" id="toggle-student-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-teal-600 text-white shadow">
+                    <i class="fa-solid fa-graduation-cap mr-1"></i> 학생용 탐구 화면
+                </button>
+                <button onclick="switchView('teacher')" id="toggle-teacher-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-teal-300 hover:text-white">
+                    <i class="fa-solid fa-chalkboard-user mr-1"></i> 교사용 대시보드
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 -->
+    <main class="max-w-7xl mx-auto p-4 md:p-6 w-full flex-grow">
+
+        <!-- ==================== [1] 학생용 화면 레이아웃 ==================== -->
+        <div id="student-view-section" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- 1단계: 6대 핵심 생태계 정보 인터랙티브 카드 (교과 개념 학습 영역) -->
+            <div class="lg:col-span-12">
+                <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+                        <i class="fa-solid fa-map text-teal-600"></i> [탐구 1단계] 생태계 환경 요인 및 다양성 탐색
+                    </h2>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+                        <!-- 삼림 -->
+                        <button onclick="selectEcosystem('forest')" id="btn-forest" class="ecosystem-card p-3 rounded-xl border-2 border-teal-600 bg-teal-50/50 text-center">
+                            <i class="fa-solid fa-tree text-2xl text-emerald-600 mb-1"></i>
+                            <div class="text-xs font-bold text-slate-800">삼림 생태계</div>
+                        </button>
+                        <!-- 습지 -->
+                        <button onclick="selectEcosystem('wetland')" id="btn-wetland" class="ecosystem-card p-3 rounded-xl border border-slate-200 bg-slate-50 text-center hover:border-teal-300">
+                            <i class="fa-solid fa-water text-2xl text-blue-500 mb-1"></i>
+                            <div class="text-xs font-bold text-slate-700">습지 생태계</div>
+                        </button>
+                        <!-- 초원 -->
+                        <button onclick="selectEcosystem('grassland')" id="btn-grassland" class="ecosystem-card p-3 rounded-xl border border-slate-200 bg-slate-50 text-center hover:border-teal-300">
+                            <i class="fa-solid fa-seedling text-2xl text-lime-600 mb-1"></i>
+                            <div class="text-xs font-bold text-slate-700">초원 생태계</div>
+                        </button>
+                        <!-- 해양 -->
+                        <button onclick="selectEcosystem('marine')" id="btn-marine" class="ecosystem-card p-3 rounded-xl border border-slate-200 bg-slate-50 text-center hover:border-teal-300">
+                            <i class="fa-solid fa-fish text-2xl text-sky-500 mb-1"></i>
+                            <div class="text-xs font-bold text-slate-700">해양 생태계</div>
+                        </button>
+                        <!-- 사막 -->
+                        <button onclick="selectEcosystem('desert')" id="btn-desert" class="ecosystem-card p-3 rounded-xl border border-slate-200 bg-slate-50 text-center hover:border-teal-300">
+                            <i class="fa-solid fa-sun-plant-wilt text-2xl text-amber-500 mb-1"></i>
+                            <div class="text-xs font-bold text-slate-700">사막 생태계</div>
+                        </button>
+                        <!-- 도시/농경지 -->
+                        <button onclick="selectEcosystem('urban')" id="btn-urban" class="ecosystem-card p-3 rounded-xl border border-slate-200 bg-slate-50 text-center hover:border-teal-300">
+                            <i class="fa-solid fa-building text-2xl text-purple-500 mb-1"></i>
+                            <div class="text-xs font-bold text-slate-700">도시 생태계</div>
+                        </button>
+                    </div>
+
+                    <!-- 생태계 세부 특성 매핑 보드 -->
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-5 p-4 bg-teal-50/20 rounded-xl border border-teal-100">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">비생물적 환경 요인</span>
+                            <p id="env-abiotic" class="text-xs font-semibold text-slate-700 mt-1">빛과 온도가 풍부하고 수분이 넉넉함.</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">대표 생산자 및 소비자</span>
+                            <p id="env-biotic" class="text-xs font-semibold text-slate-700 mt-1">침엽수, 활엽수 / 토끼, 메뚜기, 매, 독수리</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">생태계 다양성 수준</span>
+                            <p id="env-diversity" class="text-xs font-extrabold text-teal-600 mt-1">매우 높음 (그물망 형태 복잡한 먹이 사슬)</p>
+                        </div>
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">주요 보전 위협 요인</span>
+                            <p id="env-threat" class="text-xs font-bold text-rose-600 mt-1">무분별한 벌목 및 도로 개설로 인한 파편화</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2단계: 생태 피라미드 가상 조작 시뮬레이터 (중앙 왼쪽) -->
+            <div class="lg:col-span-7 flex flex-col gap-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-3">
+                            <i class="fa-solid fa-gauge-high text-teal-600"></i> [탐구 2단계] 생태 피라미드 조작 및 환경 교란 가상 실험
+                        </h3>
+
+                        <!-- 실시간 탐구 미션 상태 바 -->
+                        <div class="mb-4 p-3 bg-amber-50/70 border border-amber-200 rounded-xl flex items-center justify-between text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-amber-600 text-white font-bold rounded">실습 미션</span>
+                                <span id="mission-text" class="font-semibold text-slate-700">삼림 생태계의 평형 안정성 점수(ESI)를 90점 이상 달성하라!</span>
+                            </div>
+                            <span id="mission-badge" class="px-2.5 py-0.5 bg-slate-200 text-slate-600 font-bold rounded-full">미션 진행 중</span>
+                        </div>
+
+                        <!-- 슬라이더 컨트롤러 세트 -->
+                        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200 mb-5">
+                            <!-- 생산자 -->
+                            <div class="space-y-1">
+                                <label class="flex justify-between text-xs font-bold text-emerald-700">
+                                    <span>생산자 (풀/나무)</span>
+                                    <span id="val-producer">60%</span>
+                                </label>
+                                <input type="range" id="slider-producer" min="10" max="90" value="60" oninput="updateSimulation()" onchange="recordAttempt()" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+                            </div>
+                            <!-- 1차 소비자 -->
+                            <div class="space-y-1">
+                                <label class="flex justify-between text-xs font-bold text-lime-700">
+                                    <span>1차 소비자 (초식생물)</span>
+                                    <span id="val-primary">25%</span>
+                                </label>
+                                <input type="range" id="slider-primary" min="5" max="50" value="25" oninput="updateSimulation()" onchange="recordAttempt()" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-lime-600">
+                            </div>
+                            <!-- 2차 소비자 -->
+                            <div class="space-y-1">
+                                <label class="flex justify-between text-xs font-bold text-sky-700">
+                                    <span>2차 소비자 (소형 육식)</span>
+                                    <span id="val-secondary">12%</span>
+                                </label>
+                                <input type="range" id="slider-secondary" min="2" max="30" value="12" oninput="updateSimulation()" onchange="recordAttempt()" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600">
+                            </div>
+                            <!-- 3차 소비자 -->
+                            <div class="space-y-1">
+                                <label class="flex justify-between text-xs font-bold text-rose-700">
+                                    <span>3차 소비자 (최상위 포식자)</span>
+                                    <span id="val-tertiary">3%</span>
+                                </label>
+                                <input type="range" id="slider-tertiary" min="1" max="15" value="3" oninput="updateSimulation()" onchange="recordAttempt()" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-rose-600">
+                            </div>
+                        </div>
+
+                        <!-- 실시간 환경 교란 인위적 자극 버튼 -->
+                        <div class="mb-5">
+                            <span class="text-xs font-bold text-slate-600 block mb-2"><i class="fa-solid fa-triangle-exclamation text-amber-500"></i> 생태 환경 교란 변인 개입시키기</span>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button onclick="applyDisturbance('foreign')" class="py-2 px-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-bug"></i> 외래종 유입
+                                </button>
+                                <button onclick="applyDisturbance('road')" class="py-2 px-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-road-barrier"></i> 서식지 파편화
+                                </button>
+                                <button onclick="applyDisturbance('drought')" class="py-2 px-3 bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1">
+                                    <i class="fa-solid fa-cloud-sun-rain"></i> 극심한 기후 가뭄
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 실시간 그래프 및 게임식 가상 생태 서식지 판넬 (가로 그리드 통합) -->
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                            <!-- 차트 시뮬레이션 (6칸) -->
+                            <div class="md:col-span-6 relative w-full h-[340px]">
+                                <canvas id="pyramid-chart"></canvas>
+                            </div>
+                            
+                            <!-- 게임식 리얼 서식지 판넬 (6칸) -->
+                            <div class="md:col-span-6 bg-slate-950 border border-slate-800 rounded-2xl p-4 relative h-[340px] overflow-y-auto flex flex-col justify-between shadow-inner">
+                                <div class="absolute top-2 left-2 z-10 px-2.5 py-1 bg-slate-900/90 border border-teal-500/30 text-teal-300 font-extrabold text-[10px] rounded-lg flex items-center gap-1.5 shadow-md">
+                                    <span class="relative flex h-2 w-2">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                                    </span>
+                                    실시간 가상 서식지 모니터링
+                                </div>
+                                
+                                <div class="w-full h-full flex flex-col justify-between items-center pt-8 gap-2">
+                                    <!-- 3차 최상위 소비자 -->
+                                    <div class="w-full flex flex-col justify-center items-center py-1 border-b border-slate-800/40">
+                                        <span class="text-[9px] text-rose-400 font-bold bg-rose-950/60 px-2 py-0.5 rounded-full mb-1">3차 포식자 <span id="visual-tertiary-count" class="text-white font-medium ml-1"></span></span>
+                                        <div id="visual-tertiary" class="flex flex-wrap justify-center gap-1.5 items-center w-full min-h-[36px]"></div>
+                                    </div>
+
+                                    <!-- 2차 소비자 -->
+                                    <div class="w-full flex flex-col justify-center items-center py-1 border-b border-slate-800/40">
+                                        <span class="text-[9px] text-sky-400 font-bold bg-sky-950/60 px-2 py-0.5 rounded-full mb-1">2차 소비자 <span id="visual-secondary-count" class="text-white font-medium ml-1"></span></span>
+                                        <div id="visual-secondary" class="flex flex-wrap justify-center gap-1.5 items-center w-full min-h-[36px]"></div>
+                                    </div>
+
+                                    <!-- 1차 소비자 -->
+                                    <div class="w-full flex flex-col justify-center items-center py-1 border-b border-slate-800/40">
+                                        <span class="text-[9px] text-lime-400 font-bold bg-lime-950/60 px-2 py-0.5 rounded-full mb-1">1차 소비자 <span id="visual-primary-count" class="text-white font-medium ml-1"></span></span>
+                                        <div id="visual-primary" class="flex flex-wrap justify-center gap-1.5 items-center w-full min-h-[36px]"></div>
+                                    </div>
+
+                                    <!-- 생산자 수풀 -->
+                                    <div class="w-full flex flex-col justify-center items-center py-1">
+                                        <span class="text-[9px] text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded-full mb-1">생산자 수풀 <span id="visual-producer-count" class="text-white font-medium ml-1"></span></span>
+                                        <div id="visual-producer" class="flex flex-wrap justify-center gap-1.5 items-center w-full min-h-[40px]"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 하단 안정성 계수 계기판 및 누적 시도횟수 -->
+                    <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">실시간 수치 통계</span>
+                            <div class="flex items-center gap-4 mt-1">
+                                <div>
+                                    <span class="text-xs text-slate-500">안정성 점수(ESI):</span>
+                                    <span id="esi-score" class="text-xl font-black text-emerald-600 ml-1">95</span>
+                                </div>
+                                <div class="border-l border-slate-300 h-6"></div>
+                                <div>
+                                    <span class="text-xs text-slate-500">조작 시도 횟수:</span>
+                                    <span id="display-attempts" class="text-xl font-black text-indigo-600 ml-1">0</span>
+                                    <span class="text-[10px] text-slate-400">회</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] font-bold text-slate-400 block uppercase">실시간 안정성 등급</span>
+                            <span id="esi-grade" class="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs inline-block mt-1">매우 안정적</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3단계: 디지털 탐구 일지 보고서 작성 (중앙 오른쪽) -->
+            <div class="lg:col-span-5 flex flex-col gap-6">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col justify-between">
+                    <div>
+                        <div class="border-b border-slate-100 pb-3 mb-4">
+                            <h3 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid fa-square-poll-horizontal text-teal-600"></i> [탐구 3단계] 가상 실험 결과 분석지
+                            </h3>
+                            <p class="text-[11px] text-slate-500 mt-1">시뮬레이션을 통해 생태 피라미드가 어떤 상황에서 무너지고 다시 회복(평형)되는지 탐구한 내용을 기록하세요.</p>
+                        </div>
+
+                        <form id="inquiry-form" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">학번/이름</label>
+                                    <input type="text" id="student-name" required placeholder="예: 10405 임과학" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-semibold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">분석 중인 생태계</label>
+                                    <input type="text" id="target-ecosystem-display" readonly value="삼림 생태계" class="w-full text-xs p-2.5 bg-slate-100 border border-slate-200 rounded-lg font-semibold text-slate-700">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">1. 생태 환경 교란 시 영양 단계별 변화 소견</label>
+                                <textarea id="obs-text" rows="3" required placeholder="환경 교란 자극을 주었을 때, 하위 영양 단계와 상위 영양 단계 중 어떤 변화가 생태계의 평형에 더 치명적이었나요?" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">2. 생태계 다양성 보전을 위한 과학적 제안</label>
+                                <textarea id="idea-text" rows="3" required placeholder="예: 생태 통로 확장, 외래종 유입 차단 대책, 서식지 파편화 복구 대안 등을 기록하세요." class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"></textarea>
+                            </div>
+
+                            <button type="submit" class="w-full py-3 px-4 bg-teal-600 hover:bg-teal-700 text-white font-bold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-paper-plane"></i> 실험 결과 및 생태 제안서 제출
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단: 실시간 학급 탐구 결과 포트폴리오 누적 데이터베이스 (학생 전용 축소판) -->
+            <div class="lg:col-span-12 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-server text-teal-600"></i> 우리 학급 실시간 제출 보드
+                </h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-xs text-left">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3 font-bold text-slate-600">이름</th>
+                                <th class="px-4 py-3 font-bold text-slate-600">분석 생태계</th>
+                                <th class="px-4 py-3 font-bold text-slate-600">시도 횟수</th>
+                                <th class="px-4 py-3 font-bold text-slate-600">미션 성공 여부</th>
+                                <th class="px-4 py-3 font-bold text-slate-600">생태 보전 제안</th>
+                                <th class="px-4 py-3 font-bold text-slate-600">제출 일시</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-portfolio-tbody" class="divide-y divide-slate-100 bg-white">
+                            <tr class="empty-row-class">
+                                <td colspan="6" class="px-4 py-8 text-center text-slate-400">
+                                    <i class="fa-solid fa-database text-xl mb-2 block text-slate-300"></i> 아직 제출된 보고서가 없습니다. 가상 탐구 완료 후 제안서를 제출해 보세요!
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== [2] 교사용 관리 대시보드 화면 ==================== -->
+        <div id="teacher-view-section" class="hidden space-y-6">
+            
+            <!-- 상단 요약 통계 위젯 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- 위젯 1: 참여 학생 수 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 block uppercase">참여 학생 수</span>
+                        <span id="stat-total-students" class="text-3xl font-black text-teal-700 mt-1 block">0명</span>
+                    </div>
+                    <div class="p-3.5 bg-teal-50 rounded-2xl text-teal-600">
+                        <i class="fa-solid fa-users text-2xl"></i>
+                    </div>
+                </div>
+                <!-- 위젯 2: 평균 시도 횟수 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 block uppercase">평균 시도 횟수</span>
+                        <span id="stat-avg-attempts" class="text-3xl font-black text-indigo-700 mt-1 block">0회</span>
+                    </div>
+                    <div class="p-3.5 bg-indigo-50 rounded-2xl text-indigo-600">
+                        <i class="fa-solid fa-rotate-right text-2xl"></i>
+                    </div>
+                </div>
+                <!-- 위젯 3: 미완료 학생 수 -->
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-slate-400 block uppercase">도전 중인 학생 수 (미션 실패)</span>
+                        <span id="stat-incomplete-students" class="text-3xl font-black text-rose-700 mt-1 block">0명</span>
+                    </div>
+                    <div class="p-3.5 bg-rose-50 rounded-2xl text-rose-600">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 데이터 전송 및 테이블 관리 컨트롤 보드 -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fa-solid fa-clipboard-list text-teal-600"></i> 학급 디지털 제출 일지 세부 관리 판넬
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-0.5">실시간으로 접수된 모든 모둠의 시도 횟수와 탐구 설계안을 한자리에서 확인하고 내보낼 수 있습니다.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="exportToCSV()" class="py-2 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel"></i> 엑셀(CSV) 다운로드
+                        </button>
+                        <button onclick="openResetModal()" class="py-2 px-3.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-xl transition-all flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash-can"></i> 전체 데이터 초기화
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 교사용 관리 상세 테이블 -->
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-xs text-left">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-4 py-3.5 font-bold text-slate-600">학번/이름</th>
+                                <th class="px-4 py-3.5 font-bold text-slate-600">수행 생태계</th>
+                                <th class="px-4 py-3.5 font-bold text-slate-600 text-center">시도 횟수</th>
+                                <th class="px-4 py-3.5 font-bold text-slate-600 text-center">미션 여부</th>
+                                <th class="px-4 py-3.5 font-bold text-slate-600 text-center">제출 ESI</th>
+                                <th class="px-4 py-3.5 font-bold text-slate-600">생태계 변화 분석 소견</th>
+                                <th class="px-4 py-3.5 font-bold text-slate-600">과학적 정책 제안</th>
+                                <th class="px-4 py-3.5 font-bold text-slate-600">제출 시간</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacher-portfolio-tbody" class="divide-y divide-slate-100 bg-white">
+                            <tr class="empty-row-class">
+                                <td colspan="8" class="px-4 py-8 text-center text-slate-400">
+                                    <i class="fa-solid fa-inbox text-2xl mb-2 block text-slate-300"></i> 등록된 학생 데이터가 존재하지 않습니다.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- 사용자 정의 커스텀 토스트 알림창 -->
+    <div id="toast-message" class="fixed bottom-5 right-5 z-50 bg-slate-900/95 backdrop-blur-md text-white border border-slate-800 p-4 rounded-xl shadow-xl flex items-center gap-3 text-xs transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="p-1.5 bg-teal-600 rounded-lg">
+            <i class="fa-solid fa-circle-check text-white"></i>
+        </div>
+        <div>
+            <div class="font-bold text-teal-300" id="toast-title">성공</div>
+            <div id="toast-body" class="text-slate-300 mt-0.5">작업이 정상적으로 처리되었습니다.</div>
+        </div>
+    </div>
+
+    <!-- 교사용 권한 인증 비밀번호 입력 모달 -->
+    <div id="password-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white max-w-sm w-full rounded-2xl p-5 border border-slate-200 shadow-2xl">
+            <div class="flex items-center gap-3 text-teal-600 mb-3">
+                <div class="p-2 bg-teal-50 rounded-xl">
+                    <i class="fa-solid fa-lock text-xl"></i>
+                </div>
+                <h4 class="font-extrabold text-sm text-slate-800">교사용 대시보드 로그인</h4>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                보안을 위해 교사용 관리 영역에 진입하시려면 관리자 패스워드를 입력하세요. (기본 패스워드: <strong class="text-teal-600">0000</strong>)
+            </p>
+            <div class="mb-4">
+                <input type="password" id="teacher-password-input" class="w-full text-center text-xl p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 font-extrabold tracking-widest" placeholder="••••">
+                <p id="password-error-msg" class="text-[11px] text-rose-500 mt-1 hidden font-bold">
+                    <i class="fa-solid fa-circle-exclamation mr-1"></i>비밀번호가 올바르지 않습니다.
+                </p>
+            </div>
+            <div class="flex items-center gap-2 justify-end">
+                <button onclick="closePasswordModal()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all">취소</button>
+                <button onclick="verifyTeacherPassword()" class="py-2 px-3.5 bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm">인증하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 데이터 초기화 확인용 모달 창 -->
+    <div id="confirm-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white max-w-sm w-full rounded-2xl p-5 border border-slate-200 shadow-2xl">
+            <div class="flex items-center gap-3 text-rose-600 mb-3">
+                <div class="p-2 bg-rose-50 rounded-xl">
+                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
+                </div>
+                <h4 class="font-extrabold text-sm text-slate-800">탐구 데이터 전체 리셋</h4>
+            </div>
+            <p class="text-xs text-slate-500 leading-relaxed mb-5">
+                현재까지 저장된 모든 학급 탐구 제출 데이터가 지워집니다. 이 작업은 되돌릴 수 없습니다. 정말로 리셋하시겠습니까?
+            </p>
+            <div class="flex items-center gap-2 justify-end">
+                <button onclick="closeResetModal()" class="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-all">취소</button>
+                <button onclick="clearAllSubmissions()" class="py-2 px-3.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-lg transition-all shadow-sm">전체 삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 푸터 -->
+    <footer class="bg-slate-800 text-slate-400 py-6 text-center text-xs border-t border-slate-700 mt-8">
+        <div class="max-w-7xl mx-auto px-4 space-y-1">
+            <p>&copy; 2026 AI·디지털 기반 통합과학 2 생태계 평형 탐구 가상 모의 실험 교구.</p>
+            <p class="text-slate-500">본 교구는 선도교사 연수 실습용으로 완벽한 프론트엔드 반응형 디자인 규격에 맞춰 제작되었습니다.</p>
+        </div>
+    </footer>
+
+    <!-- 파이어베이스 모듈 로드 -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, writeBatch, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // 전역 글로벌 변수 바인딩
+        window.firebaseApp = null;
+        window.firestoreDb = null;
+        window.firebaseAuth = null;
+        window.isCloudMode = false;
+
+        // 글로벌 환경 체크 및 초기화
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecosystem-simulator-default';
+        let firebaseConfig = null;
+        try {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch (e) {
+            console.warn("파이어베이스 설정 분석 실패, 로컬 스토리지 모드로 작동합니다.", e);
+        }
+
+        if (firebaseConfig) {
+            try {
+                window.firebaseApp = initializeApp(firebaseConfig);
+                window.firestoreDb = getFirestore(window.firebaseApp);
+                window.firebaseAuth = getAuth(window.firebaseApp);
+
+                // 익명 인증 진행
+                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                if (token) {
+                    await signInWithCustomToken(window.firebaseAuth, token);
+                } else {
+                    await signInAnonymously(window.firebaseAuth);
+                }
+
+                window.isCloudMode = true;
+                const badge = document.getElementById('cloud-status-badge');
+                if (badge) {
+                    badge.innerHTML = '<i class="fa-solid fa-cloud-sun mr-1"></i>클라우드 동기화 모드';
+                    badge.className = "px-2 py-0.5 bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] rounded-md font-normal";
+                }
+                console.log("Firebase 클라우드 연동 성공. 앱 ID:", appId);
+
+                // 실시간 Firestore 리스너 시작
+                startFirestoreSync(appId);
+            } catch (err) {
+                console.error("Firebase 초기화 에러. 로컬 모드로 대체 처리합니다.", err);
+            }
+        }
+
+        // Firestore 실시간 모니터링 연동
+        function startFirestoreSync(appId) {
+            // RULE 1에 부합하는 엄격한 경로 설정
+            const targetCol = collection(window.firestoreDb, 'artifacts', appId, 'public', 'data', 'submissions');
+            
+            // 실시간 관찰 리스너 구동
+            onSnapshot(targetCol, (snapshot) => {
+                const freshData = [];
+                snapshot.forEach((doc) => {
+                    freshData.push({ id: doc.id, ...doc.data() });
+                });
+                // 최신 데이터순 정렬
+                freshData.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // 전역 데이터베이스 업데이트
+                window.submissions = freshData;
+                window.renderStudentPortfolio();
+                window.renderTeacherDashboard();
+            }, (error) => {
+                console.error("Firestore 실시간 동기화 오류:", error);
+            });
+        }
+    </script>
+
+    <!-- 메인 자바스크립트 소스코드 영역 -->
+    <script>
+        // 1. 생태계별 초기 기본 데이터 및 미션 정보 매핑
+        const ecosystemDataset = {
+            forest: {
+                name: "삼림 생태계",
+                abiotic: "온난하고 수분이 가장 풍부하며, 계절별 일조량이 일정한 특성을 보입니다.",
+                biotic: "침엽수/활엽수 (생산자), 토끼/곤충 (1차), 개구리/뱀 (2차), 독수리 (3차)",
+                diversity: "매우 높음 (복잡한 생태 그물망을 이뤄 평형 유지력이 탁월함)",
+                threat: "무분별한 벌목 및 휴양림 도로 개발로 인한 대규모 서식지 파편화 및 고립화",
+                mission: "안정성 점수(ESI)를 90점 이상으로 끌어올리세요!",
+                targetESI: 90,
+                initVals: [60, 25, 12, 3]
+            },
+            wetland: {
+                name: "습지 생태계",
+                abiotic: "상시 담수 상태로 산소가 희박하고 유기물이 매우 풍부한 수생 환경입니다.",
+                biotic: "갈대/부들 (생산자), 잠자리 애벌레 (1차), 붕어/왜가리 (2차), 수달 (3차)",
+                diversity: "높음 (다양한 수생 및 육상 전이대 중간 생물들의 요람)",
+                threat: "무분별한 매립 및 농경지 개간, 주변 도시 하수 유입으로 인한 부영양화",
+                mission: "안정성 점수(ESI)를 85점 이상으로 끌어올리세요!",
+                targetESI: 85,
+                initVals: [55, 28, 14, 3]
+            },
+            grassland: {
+                name: "초원 생태계",
+                abiotic: "강수량이 삼림보다 적어 나무가 자라기 힘들며 건기와 우기가 뚜렷함.",
+                biotic: "다양한 풀/잡초 (생산자), 메뚜기/얼룩말 (1차), 족제비/치타 (2차), 사자 (3차)",
+                diversity: "보통 (삼림에 비해 단순하나 넓은 영역의 생태 평형 구축)",
+                threat: "가축 과방목 및 기후변화에 의한 토지 사막화 작용 가속화",
+                mission: "안정성 점수(ESI)를 80점 이상으로 이끌어내세요!",
+                targetESI: 80,
+                initVals: [50, 30, 16, 4]
+            },
+            marine: {
+                name: "해양 생태계",
+                abiotic: "염류 함량이 높고, 수심에 따라 공급되는 광선과 수온차가 극명함.",
+                biotic: "식물성 플랑크톤 (생산자), 동물성 플랑크톤 (1차), 정어리 (2차), 상어/고래 (3차)",
+                diversity: "매우 높음 (지구 전체 생태 산소 공급의 핵심축을 담당)",
+                threat: "과도한 어획, 해수 온도 상승에 따른 백화 현상 및 플라스틱 미세 입자 오염",
+                mission: "안정성 점수(ESI)를 90점 이상으로 완성시키세요!",
+                targetESI: 90,
+                initVals: [65, 22, 10, 3]
+            },
+            desert: {
+                name: "사막 생태계",
+                abiotic: "연 강수량 250mm 이하의 극단적인 가뭄과 극심한 일교차가 특징입니다.",
+                biotic: "선인장/가시덤불 (생산자), 전갈/도마뱀 (1차), 뱀/전투쥐 (2차), 사막여우 (3차)",
+                diversity: "매우 낮음 (먹이사슬이 극도로 단순하여 생태 환경 충격에 대단히 취약함)",
+                threat: "관광 오프로드 주행 및 지하수 고갈에 따른 오아시스 소멸",
+                mission: "척박한 사막 생태계의 안정성 점수(ESI)를 75점 이상 맞추세요!",
+                targetESI: 75,
+                initVals: [40, 35, 20, 5]
+            },
+            urban: {
+                name: "도시 생태계",
+                abiotic: "인위적인 콘크리트 인프라로 인해 불투수 면적이 넓고 열섬 현상이 발생함.",
+                biotic: "가로수/정원식물 (생산자), 비둘기/쥐 (1차), 길고양이 (2차), 매/인간 (3차)",
+                diversity: "극히 낮음 (종 단순화가 극심하며 인위적 보조 에너지에 주로 생존 의존)",
+                threat: "서식지 파편화 완벽 고착, 인공 조명 빛 공해 및 미세먼지로 인한 호흡기 질환",
+                mission: "가장 파괴된 도시 생태계의 ESI 점수를 70점 이상으로 복구하세요!",
+                targetESI: 70,
+                initVals: [30, 45, 20, 5]
+            }
+        };
+
+        // 글로벌 상태값 및 저장소 데이터 초기 로드
+        let currentEcosystem = "forest";
+        let pyramidChart = null;
+        let attemptsCount = 0; 
+        window.submissions = []; // 공유 수정을 위해 window 전역 영역에 바인딩
+        let isTeacherAuthenticated = false;
+
+        // 로컬스토리지 로딩 백업
+        if (localStorage.getItem('ecosystem_submissions')) {
+            try {
+                window.submissions = JSON.parse(localStorage.getItem('ecosystem_submissions'));
+            } catch (e) {
+                window.submissions = [];
+            }
+        }
+
+        // 2. 프리미엄 신디사이저 효과음 기능 (Web Audio API 사용, 외부 에셋 미사용)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSynthSound(type) {
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'click') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+                    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.1);
+                } else if (type === 'success') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                    osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+                    osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.3); // C6
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.5);
+                } else if (type === 'disturbance') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.4);
+                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.45);
+                } else if (type === 'error') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                    osc.frequency.setValueAtTime(120, audioCtx.currentTime + 0.12);
+                    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+                }
+            } catch (err) {
+                console.warn("오디오 플레이 불가 상태:", err);
+            }
+        }
+
+        // 3. 사용자 정의 토스트 메시지 띄우기 함수
+        function triggerToast(title, text, type = 'success') {
+            const toastEl = document.getElementById('toast-message');
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-body').innerText = text;
+            
+            toastEl.className = toastEl.className.replace('translate-y-20 opacity-0', 'translate-y-0 opacity-100');
+            setTimeout(() => {
+                toastEl.className = toastEl.className.replace('translate-y-0 opacity-100', 'translate-y-20 opacity-0');
+            }, 3000);
+        }
+
+        // 4. 슬라이더 조작 시 횟수 가속 증가 방지형 시도 기록 함수
+        function recordAttempt() {
+            attemptsCount++;
+            document.getElementById('display-attempts').innerText = attemptsCount;
+            playSynthSound('click');
+        }
+
+        // 5. 생태계 탭 전환 핸들러
+        function selectEcosystem(key) {
+            currentEcosystem = key;
+            const data = ecosystemDataset[key];
+
+            // 탭 버튼 테두리 강조 리셋 및 재부여
+            Object.keys(ecosystemDataset).forEach(k => {
+                const btn = document.getElementById(`btn-${k}`);
+                if (btn) {
+                    if (k === key) {
+                        btn.className = "ecosystem-card p-3 rounded-xl border-2 border-teal-600 bg-teal-50/50 text-center";
+                    } else {
+                        btn.className = "ecosystem-card p-3 rounded-xl border border-slate-200 bg-slate-50 text-center hover:border-teal-300";
+                    }
+                }
+            });
+
+            // 상태 매핑 텍스트 갱신
+            document.getElementById('target-ecosystem-display').value = data.name;
+            document.getElementById('env-abiotic').innerText = data.abiotic;
+            document.getElementById('env-biotic').innerText = data.biotic;
+            document.getElementById('env-diversity').innerText = data.diversity;
+            document.getElementById('env-threat').innerText = data.threat;
+
+            // 미션 카드 텍스트 업데이트
+            document.getElementById('mission-text').innerText = `${data.name} 미션: ${data.mission}`;
+
+            // 슬라이더 값을 해당 생태계 초기값으로 안전 갱신
+            document.getElementById('slider-producer').value = data.initVals[0];
+            document.getElementById('slider-primary').value = data.initVals[1];
+            document.getElementById('slider-secondary').value = data.initVals[2];
+            document.getElementById('slider-tertiary').value = data.initVals[3];
+
+            playSynthSound('click');
+            updateSimulation();
+            triggerToast(`${data.name} 로드 완료`, "가상 환경 분석 모델 데이터가 성공적으로 갱신되었습니다.");
+        }
+
+        // 6. 입체적인 고화질 캐릭터 SVG 템플릿 팩
+        const SVG_TEMPLATES = {
+            tertiary: (opacity, scale) => `
+                <div class="transition-all duration-300 transform hover:scale-110 flex flex-col items-center p-0.5" style="opacity: ${opacity}; transform: scale(${scale});">
+                    <svg class="w-10 h-8 drop-shadow-[0_4px_6px_rgba(244,63,94,0.4)]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M32 48C28 40 12 32 4 28C16 28 24 34 32 38C40 34 48 28 60 28C52 32 36 40 32 48Z" fill="#78350F"/>
+                        <path d="M32 42C30 38 20 28 14 26C22 28 26 32 32 35C38 32 42 28 50 26C44 28 34 38 32 42Z" fill="#92400E"/>
+                        <circle cx="32" cy="18" r="7" fill="#F3F4F6"/>
+                        <circle cx="30" cy="17" r="1.2" fill="#000"/>
+                        <circle cx="34" cy="17" r="1.2" fill="#000"/>
+                        <path d="M32 19L29 23H35L32 19Z" fill="#F59E0B"/>
+                    </svg>
+                </div>
+            `,
+            secondary: (opacity, scale) => `
+                <div class="transition-all duration-300 transform hover:scale-110 p-0.5" style="opacity: ${opacity}; transform: scale(${scale});">
+                    <svg class="w-8 h-8 drop-shadow-[0_4px_6px_rgba(56,189,248,0.4)]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="32" cy="38" rx="16" ry="12" fill="#15803D"/>
+                        <ellipse cx="32" cy="38" rx="12" ry="9" fill="#22C55E"/>
+                        <circle cx="24" cy="28" r="5" fill="#F59E0B"/>
+                        <circle cx="24" cy="28" r="2.5" fill="#000"/>
+                        <circle cx="40" cy="28" r="5" fill="#F59E0B"/>
+                        <circle cx="40" cy="28" r="2.5" fill="#000"/>
+                        <path d="M16 44C12 44 8 48 10 52C12 56 20 50 20 46" stroke="#166534" stroke-width="3" fill="none"/>
+                        <path d="M48 44C52 44 56 48 54 52C52 56 44 50 44 46" stroke="#166534" stroke-width="3" fill="none"/>
+                        <ellipse cx="32" cy="41" rx="8" ry="6" fill="#FEF08A"/>
+                    </svg>
+                </div>
+            `,
+            primary: (opacity, scale) => `
+                <div class="transition-all duration-300 transform hover:scale-110 p-0.5" style="opacity: ${opacity}; transform: scale(${scale});">
+                    <svg class="w-8 h-8 drop-shadow-[0_4px_6px_rgba(132,204,22,0.4)]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 36C12 30 24 24 44 24C48 24 52 28 50 32C46 38 20 42 12 36Z" fill="#65A30D"/>
+                        <path d="M40 30L48 16L52 38" stroke="#4D7C0F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M30 32L34 22L36 38" stroke="#4D7C0F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        <path d="M16 26C14 20 10 16 6 18" stroke="#4D7C0F" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                        <path d="M18 25C18 18 16 14 14 14" stroke="#4D7C0F" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+                        <circle cx="18" cy="29" r="2" fill="#000"/>
+                    </svg>
+                </div>
+            `,
+            producer: (opacity, scale) => `
+                <div class="transition-all duration-300 transform hover:scale-110 p-0.5" style="opacity: ${opacity}; transform: scale(${scale});">
+                    <svg class="w-8 h-10 drop-shadow-[0_4px_6px_rgba(16,185,129,0.4)]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="29" y="44" width="6" height="12" fill="#78350F" rx="2"/>
+                        <polygon points="32,10 16,30 48,30" fill="#065F46"/>
+                        <polygon points="32,18 12,38 52,38" fill="#047857"/>
+                        <polygon points="32,26 8,46 56,46" fill="#059669"/>
+                        <polygon points="32,14 22,26 42,26" fill="#34D399" opacity="0.3"/>
+                        <polygon points="32,22 18,34 46,34" fill="#34D399" opacity="0.3"/>
+                    </svg>
+                </div>
+            `
+        };
+
+        // 7. 개체 수 비주얼 렌더링 엔진 (영양단계별 맞춤 스케일링 구현)
+        function renderEcosystemHabitat(containerId, type, value, minThreshold, divisor) {
+            const container = document.getElementById(containerId);
+            const countSpan = document.getElementById(`${containerId}-count`);
+            
+            let count = Math.floor(value / divisor);
+            if (count === 0 && value > 0) {
+                count = 1;
+            }
+
+            if (countSpan) {
+                countSpan.innerText = `(${count}개체)`;
+            }
+
+            let htmlContent = "";
+            const opacity = value < minThreshold ? "0.35" : "1.0";
+
+            for (let i = 0; i < count; i++) {
+                const individualScale = 0.85 + (i % 3) * 0.1;
+                htmlContent += SVG_TEMPLATES[type](opacity, individualScale);
+            }
+
+            container.innerHTML = htmlContent;
+        }
+
+        // 8. 실시간 가상 시뮬레이션 데이터 갱신 및 차트 드로잉
+        function updateSimulation() {
+            // 슬라이더 조절 값 캡처
+            const prod = parseInt(document.getElementById('slider-producer').value);
+            const prim = parseInt(document.getElementById('slider-primary').value);
+            const seco = parseInt(document.getElementById('slider-secondary').value);
+            const tert = parseInt(document.getElementById('slider-tertiary').value);
+
+            // 레이블 매치 업데이트
+            document.getElementById('val-producer').innerText = prod + "%";
+            document.getElementById('val-primary').innerText = prim + "%";
+            document.getElementById('val-secondary').innerText = seco + "%";
+            document.getElementById('val-tertiary').innerText = tert + "%";
+
+            // 영양단계별 최댓값 한계를 고려한 다이내믹 개체수 렌더링
+            renderEcosystemHabitat('visual-producer', 'producer', prod, 20, 10);     // 10%당 1개체
+            renderEcosystemHabitat('visual-primary', 'primary', prim, 8, 5);         // 5%당 1개체
+            renderEcosystemHabitat('visual-secondary', 'secondary', seco, 4, 3);     // 3%당 1개체
+            renderEcosystemHabitat('visual-tertiary', 'tertiary', tert, 2, 1.5);     // 1.5%당 1개체
+
+            // 안정성 점수 (ESI) 계산 알고리즘 
+            let baseStability = 100;
+            const deviationProd = Math.abs(prod - 55); 
+            const deviationPrim = Math.abs(prim - 25);
+            const deviationSeco = Math.abs(seco - 14);
+            const deviationTert = Math.abs(tert - 4);
+
+            let diversityWeight = 1.0;
+            if (currentEcosystem === 'desert' || currentEcosystem === 'urban') {
+                diversityWeight = 1.8; 
+            }
+
+            const penalty = (deviationProd + deviationPrim + deviationSeco + deviationTert) * diversityWeight;
+            let finalESI = Math.round(baseStability - penalty);
+            finalESI = Math.max(10, Math.min(100, finalESI)); 
+
+            // ESI UI 바인딩
+            const esiEl = document.getElementById('esi-score');
+            const gradeEl = document.getElementById('esi-grade');
+            esiEl.innerText = finalESI;
+
+            // 미션 목표 부합성 평가
+            const targetESI = ecosystemDataset[currentEcosystem].targetESI;
+            const badgeEl = document.getElementById('mission-badge');
+            if (finalESI >= targetESI) {
+                if (badgeEl.innerText !== "미션 성공 🌟") {
+                    playSynthSound('success');
+                }
+                badgeEl.innerText = "미션 성공 🌟";
+                badgeEl.className = "px-2.5 py-0.5 bg-emerald-500 text-white font-bold rounded-full animate-bounce";
+            } else {
+                badgeEl.innerText = "미션 진행 중";
+                badgeEl.className = "px-2.5 py-0.5 bg-slate-200 text-slate-600 font-bold rounded-full";
+            }
+
+            if (finalESI >= 85) {
+                esiEl.className = "text-2xl font-black text-emerald-600";
+                gradeEl.className = "px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold text-xs inline-block mt-1";
+                gradeEl.innerText = "매우 안정적 (자가 회복 가능)";
+            } else if (finalESI >= 60) {
+                esiEl.className = "text-2xl font-black text-amber-600";
+                gradeEl.className = "px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 font-extrabold text-xs inline-block mt-1";
+                gradeEl.innerText = "주의 (외부 충격에 취약)";
+            } else {
+                esiEl.className = "text-2xl font-black text-rose-600";
+                gradeEl.className = "px-3 py-1.5 rounded-full bg-rose-100 text-rose-800 font-extrabold text-xs inline-block mt-1";
+                gradeEl.innerText = "붕괴 위험 (평형 상실)";
+            }
+
+            // 가로 막대 차트 (생태 피라미드 형상 구현)
+            const ctxChart = document.getElementById('pyramid-chart').getContext('2d');
+            const chartData = {
+                labels: ["3차 포식자", "2차 소비자", "1차 소비자", "생산자"],
+                datasets: [{
+                    label: '에너지 점유 비율 (%)',
+                    data: [tert, seco, prim, prod],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.85)',
+                        'rgba(56, 189, 248, 0.85)',
+                        'rgba(132, 204, 22, 0.85)',
+                        'rgba(16, 185, 129, 0.85)'
+                    ],
+                    borderColor: [
+                        '#be123c', '#0369a1', '#4d7c0f', '#047857'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    barThickness: 28
+                }]
+            };
+
+            const chartOptions = {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        max: 100,
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                    },
+                    y: {
+                        grid: { display: false }
+                    }
+                }
+            };
+
+            if (pyramidChart) {
+                pyramidChart.destroy();
+            }
+            pyramidChart = new Chart(ctxChart, {
+                type: 'bar',
+                data: chartData,
+                options: chartOptions
+            });
+        }
+
+        // 9. 인위적 환경 교란 프리셋 버튼 컨트롤러
+        function applyDisturbance(type) {
+            attemptsCount++; 
+            document.getElementById('display-attempts').innerText = attemptsCount;
+
+            let p = 60, prim = 25, s = 12, t = 3;
+
+            if (type === 'foreign') {
+                p = 65; prim = 10; s = 30; t = 5;
+                triggerToast("외래종 유입 충격 발생", "상위 영양 포식자 급증으로 1차 소비자가 급감하여 먹이사슬 평형이 깨집니다.");
+            } else if (type === 'road') {
+                p = 70; prim = 35; s = 8; t = 1;
+                triggerToast("서식지 파편화 충격 발생", "핵심 서식지 고립 및 로드킬 유발로 최상위 포식자가 거의 소멸 위기에 놓입니다.");
+            } else if (type === 'drought') {
+                p = 15; prim = 8; s = 4; t = 1;
+                triggerToast("극심한 기후 가뭄 발생", "생산자 풀뿌리가 고사되어 영양 단계 전반의 에너지가 일괄 폭락하며 붕괴됩니다.");
+            }
+
+            document.getElementById('slider-producer').value = p;
+            document.getElementById('slider-primary').value = prim;
+            document.getElementById('slider-secondary').value = s;
+            document.getElementById('slider-tertiary').value = t;
+
+            playSynthSound('disturbance');
+            updateSimulation();
+        }
+
+        // 10. 화면 모드 전환 함수 (비밀번호 보안 단계 추가)
+        function switchView(mode) {
+            if (mode === 'teacher') {
+                if (isTeacherAuthenticated) {
+                    executeSwitchView('teacher');
+                } else {
+                    openPasswordModal();
+                }
+            } else {
+                executeSwitchView('student');
+            }
+        }
+
+        function executeSwitchView(mode) {
+            const studentSection = document.getElementById('student-view-section');
+            const teacherSection = document.getElementById('teacher-view-section');
+            const studentBtn = document.getElementById('toggle-student-btn');
+            const teacherBtn = document.getElementById('toggle-teacher-btn');
+
+            if (mode === 'student') {
+                studentSection.classList.remove('hidden');
+                teacherSection.classList.add('hidden');
+                studentBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-teal-600 text-white shadow";
+                teacherBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-teal-300 hover:text-white";
+                setTimeout(updateSimulation, 50);
+            } else {
+                studentSection.classList.add('hidden');
+                teacherSection.classList.remove('hidden');
+                studentBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all text-teal-300 hover:text-white";
+                teacherBtn.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-teal-600 text-white shadow";
+                renderTeacherDashboard();
+            }
+        }
+
+        // 11. 비밀번호 모달 제어 함수군
+        function openPasswordModal() {
+            document.getElementById('password-modal').classList.remove('hidden');
+            document.getElementById('teacher-password-input').value = '';
+            document.getElementById('password-error-msg').classList.add('hidden');
+            document.getElementById('teacher-password-input').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('password-modal').classList.add('hidden');
+        }
+
+        function verifyTeacherPassword() {
+            const pwInput = document.getElementById('teacher-password-input').value;
+            if (pwInput === "0000") {
+                isTeacherAuthenticated = true;
+                closePasswordModal();
+                executeSwitchView('teacher');
+                triggerToast("관리자 로그인", "교사용 대시보드가 정상적으로 잠금 해제되었습니다.", "success");
+            } else {
+                document.getElementById('password-error-msg').classList.remove('hidden');
+                document.getElementById('teacher-password-input').select();
+                playSynthSound('error');
+            }
+        }
+
+        document.getElementById('teacher-password-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyTeacherPassword();
+            }
+        });
+
+        // 12. 교사용 대시보드 데이터 동기화 및 요약 통계 렌더링
+        function renderTeacherDashboard() {
+            const totalCount = window.submissions.length;
+            document.getElementById('stat-total-students').innerText = `${totalCount}명`;
+
+            let avgAttempts = 0;
+            let incompleteCount = 0;
+
+            if (totalCount > 0) {
+                const totalAttempts = window.submissions.reduce((sum, item) => sum + parseInt(item.attempts || 0), 0);
+                avgAttempts = Math.round((totalAttempts / totalCount) * 10) / 10;
+                incompleteCount = window.submissions.filter(item => !item.isSuccess).length;
+            }
+
+            document.getElementById('stat-avg-attempts').innerText = `${avgAttempts}회`;
+            document.getElementById('stat-incomplete-students').innerText = `${incompleteCount}명`;
+
+            const teacherTbody = document.getElementById('teacher-portfolio-tbody');
+            teacherTbody.innerHTML = '';
+
+            if (totalCount === 0) {
+                teacherTbody.innerHTML = `
+                    <tr class="empty-row-class">
+                        <td colspan="8" class="px-4 py-8 text-center text-slate-400">
+                            <i class="fa-solid fa-inbox text-2xl mb-2 block text-slate-300"></i> 등록된 학생 데이터가 존재하지 않습니다.
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            window.submissions.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-all text-slate-600 border-b border-slate-100";
+                
+                const successBadge = item.isSuccess 
+                    ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-extrabold rounded-full">성공 (정답)</span>`
+                    : `<span class="px-2 py-0.5 bg-rose-100 text-rose-800 font-extrabold rounded-full">도전 (오답)</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3.5 font-bold text-slate-800 whitespace-nowrap">${item.name || ''}</td>
+                    <td class="px-4 py-3.5 whitespace-nowrap"><span class="px-2 py-0.5 bg-teal-50 text-teal-800 rounded font-semibold border border-teal-100">${item.ecoType || ''}</span></td>
+                    <td class="px-4 py-3.5 text-center font-bold text-indigo-600 whitespace-nowrap">${item.attempts || 0}회</td>
+                    <td class="px-4 py-3.5 text-center whitespace-nowrap">${successBadge}</td>
+                    <td class="px-4 py-3.5 text-center font-black text-slate-700 whitespace-nowrap">${item.esi || 0}점</td>
+                    <td class="px-4 py-3.5 max-w-[200px] truncate" title="${item.observation || ''}">${item.observation || ''}</td>
+                    <td class="px-4 py-3.5 max-w-[200px] truncate" title="${item.proposal || ''}">${item.proposal || ''}</td>
+                    <td class="px-4 py-3.5 text-slate-400 whitespace-nowrap">${item.time || ''}</td>
+                `;
+                teacherTbody.appendChild(tr);
+            });
+        }
+
+        // 13. 학생 전용 간이 포트폴리오 렌더링
+        window.renderStudentPortfolio = function() {
+            const studentTbody = document.getElementById('student-portfolio-tbody');
+            studentTbody.innerHTML = '';
+
+            if (window.submissions.length === 0) {
+                studentTbody.innerHTML = `
+                    <tr class="empty-row-class">
+                        <td colspan="6" class="px-4 py-8 text-center text-slate-400">
+                            <i class="fa-solid fa-database text-xl mb-2 block text-slate-300"></i> 아직 제출된 보고서가 없습니다. 가상 탐구 완료 후 제안서를 제출해 보세요!
+                        </td>
+                    </tr>`;
+                return;
+            }
+
+            const previewList = window.submissions.slice(0, 10);
+            previewList.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-teal-50/20 transition-all text-slate-600 border-b border-slate-100";
+                
+                const successBadge = item.isSuccess 
+                    ? `<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-extrabold rounded-full">성공</span>`
+                    : `<span class="px-2 py-0.5 bg-rose-50 text-rose-700 font-extrabold rounded-full">도전 중</span>`;
+
+                tr.innerHTML = `
+                    <td class="px-4 py-3 font-semibold text-slate-800">${item.name || ''}</td>
+                    <td class="px-4 py-3">${item.ecoType || ''}</td>
+                    <td class="px-4 py-3 font-bold text-indigo-600">${item.attempts || 0}회</td>
+                    <td class="px-4 py-3">${successBadge}</td>
+                    <td class="px-4 py-3 max-w-[250px] truncate" title="${item.proposal || ''}">${item.proposal || ''}</td>
+                    <td class="px-4 py-3 text-slate-400">${item.time || ''}</td>
+                `;
+                studentTbody.appendChild(tr);
+            });
+        };
+
+        // 14. 가상 실험 보고서 제출 제어 핸들러
+        document.getElementById('inquiry-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const studentName = document.getElementById('student-name').value.trim();
+            const targetEcoName = document.getElementById('target-ecosystem-display').value;
+            const observation = document.getElementById('obs-text').value.trim();
+            const idea = document.getElementById('idea-text').value.trim();
+
+            const currentESI = parseInt(document.getElementById('esi-score').innerText);
+            const targetESI = ecosystemDataset[currentEcosystem].targetESI;
+            const isSuccess = currentESI >= targetESI;
+
+            const currentDate = new Date().toLocaleString('ko-KR', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const newRecord = {
+                name: studentName,
+                ecoType: targetEcoName,
+                attempts: attemptsCount,
+                isSuccess: isSuccess,
+                esi: currentESI,
+                observation: observation,
+                proposal: idea,
+                time: currentDate,
+                timestamp: Date.now()
+            };
+
+            if (window.isCloudMode) {
+                // 파이어베이스 클라우드 데이터 전송
+                try {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecosystem-simulator-default';
+                    // RULE 1 준수 엄격한 문서 경로
+                    const targetCol = collection(window.firestoreDb, 'artifacts', appId, 'public', 'data', 'submissions');
+                    await addDoc(targetCol, newRecord);
+                } catch (err) {
+                    console.error("클라우드 업로드 에러:", err);
+                    triggerToast("오류", "클라우드 전송에 실패하여 로컬 임시 저장을 실시합니다.");
+                }
+            } else {
+                // 로컬 전용 대체 저장
+                window.submissions.unshift(newRecord);
+                localStorage.setItem('ecosystem_submissions', JSON.stringify(window.submissions));
+                window.renderStudentPortfolio();
+            }
+
+            // 폼 필드 초기화
+            attemptsCount = 0;
+            document.getElementById('display-attempts').innerText = "0";
+            document.getElementById('obs-text').value = '';
+            document.getElementById('idea-text').value = '';
+
+            triggerToast("제안서 제출 완료", `${studentName} 학생의 생태 평형 복구 제안서가 성공적으로 전달되었습니다.`);
+            playSynthSound('success');
+        });
+
+        // 15. 전체 리셋 모달창 팝업 제어
+        function openResetModal() {
+            document.getElementById('confirm-modal').classList.remove('hidden');
+        }
+        function closeResetModal() {
+            document.getElementById('confirm-modal').classList.add('hidden');
+        }
+
+        // 16. 저장소 전체 리셋 실행 함수
+        async function clearAllSubmissions() {
+            if (window.isCloudMode) {
+                try {
+                    const appId = typeof __app_id !== 'undefined' ? __app_id : 'ecosystem-simulator-default';
+                    // RULE 1 및 RULE 2에 따라 단순한 collection reference 획득 후 순차 삭제 진행
+                    const targetCol = collection(window.firestoreDb, 'artifacts', appId, 'public', 'data', 'submissions');
+                    const qSnapshot = await getDocs(targetCol);
+                    
+                    for (const d of qSnapshot.docs) {
+                        await deleteDoc(doc(window.firestoreDb, 'artifacts', appId, 'public', 'data', 'submissions', d.id));
+                    }
+                } catch (err) {
+                    console.error("클라우드 일괄 리셋 오류:", err);
+                    triggerToast("오류", "클라우드 리셋 실행 중 에러가 생겼습니다.");
+                }
+            } else {
+                window.submissions = [];
+                localStorage.removeItem('ecosystem_submissions');
+                window.renderStudentPortfolio();
+            }
+
+            isTeacherAuthenticated = false; 
+            renderTeacherDashboard();
+            closeResetModal();
+
+            triggerToast("초기화 완료", "학급의 모든 가상 탐구 제안 데이터가 초기화되었습니다.");
+            playSynthSound('disturbance');
+        }
+
+        // 17. 엑셀(CSV) 파일 변환 및 우아한 한글 깨짐 방지 다운로드 처리
+        function exportToCSV() {
+            if (window.submissions.length === 0) {
+                triggerToast("오류", "저장된 학생 보고서 데이터가 없어 내보내기를 할 수 없습니다.");
+                playSynthSound('error');
+                return;
+            }
+
+            let csvContent = "\uFEFF"; // 한글 깨짐 방지를 위한 BOM 문자 추가
+            csvContent += "이름,생태계 유형,조작 시도 횟수,미션 성공 여부,제출 ESI 안정성 점수,생태계 변화 소견,생태 보전 정책 제안,제출 시간\n";
+
+            window.submissions.forEach(item => {
+                const successText = item.isSuccess ? "성공" : "실패";
+                const cleanObs = `"${(item.observation || '').replace(/"/g, '""')}"`;
+                const cleanProp = `"${(item.proposal || '').replace(/"/g, '""')}"`;
+                
+                csvContent += `${item.name || ''},${item.ecoType || ''},${item.attempts || 0}회,${successText},${item.esi || 0}점,${cleanObs},${cleanProp},${item.time || ''}\n`;
+            });
+
+            // 다운로드 Blob 인터페이스 가동
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `생태계_탐구_학급_포트폴리오_${new Date().toLocaleDateString()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            triggerToast("엑셀 파일 다운로드", "전체 학급 포트폴리오 엑셀 파일 다운로드가 시작되었습니다.");
+            playSynthSound('success');
+        }
+
+        // 18. 최초 로딩 시 기본 가동 처리
+        window.addEventListener('load', () => {
+            selectEcosystem('forest');
+            window.renderStudentPortfolio();
+        });
+    </script>
+</body>
+</html>
